@@ -1,0 +1,27 @@
+variable "bucket-count" {
+  description = "The number of buckets needed (default=1): "
+  type        = number
+  default     = 1
+}
+
+resource "random_string" "bucket_suffix" {
+  count   = var.bucket-count
+  length  = 5
+  upper   = false
+  lower   = true
+  numeric  = true
+  special = false
+}
+
+resource "aws_s3_bucket" "example_bucket" {
+  count  = var.bucket-count
+  bucket = "terraform-made-bucket-${random_string.bucket_suffix[count.index].result}-count-${count.index}"
+  tags = {
+    Name        = "My_bucket_${count.index}"
+    Environment = "dev"
+  }
+}
+
+output "bucket_names" {
+  value = [for i in aws_s3_bucket.example_bucket : i.bucket]
+}
